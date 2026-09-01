@@ -1,3 +1,7 @@
+## 0.3.4 (2026-09-01)
+
+- fix: tolerate missing vocabularysets directory instead of throwing NPE on startup
+
 ## 0.3.3 (2026-09-01)
 
 - fix: tolerate missing rewards directory instead of throwing NPE on startup
