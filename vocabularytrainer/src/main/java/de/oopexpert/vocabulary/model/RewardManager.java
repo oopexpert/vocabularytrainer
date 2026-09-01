@@ -63,6 +63,11 @@ public class RewardManager {
 
         List<Reward> rewards = new ArrayList<>();
 
+        if (rewardFiles == null) {
+            // Kein rewards-Verzeichnis vorhanden (z.B. frische Installation) - keine Rewards laden.
+            return rewards;
+        }
+
         Gson gson = new Gson();
 
         for (File rewardFile : rewardFiles) {
