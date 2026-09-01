@@ -1,3 +1,7 @@
+## 0.3.5 (2026-09-01)
+
+- fix: notify ImageTransition on empty or single background image so panel actually paints it
+
 ## 0.3.4 (2026-09-01)
 
 - fix: tolerate missing vocabularysets directory instead of throwing NPE on startup
