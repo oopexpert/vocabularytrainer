@@ -54,9 +54,11 @@ public class BackgroundImageRotation {
 	private void rotate() {
 		
 		if (backgroundImages.isEmpty()) {
-    		// do nothing
+    		// Kein Hintergrundbild vorhanden - Fallback-Bild (no_background.jpg) anzeigen.
+    		imageTransition.startTransition(currentImage);
     	} else if (backgroundImages.count() == 1) {
     		currentImage = backgroundImages.get(0);
+    		imageTransition.startTransition(currentImage);
     	} else {
     		currentImage = nextRandomImageDifferentFromCurrentImage();
     		imageTransition.startTransition(currentImage);
