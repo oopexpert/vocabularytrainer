@@ -1,3 +1,7 @@
+## 0.3.2 (2026-09-01)
+
+- fix: package no_background.jpg fallback resource into jar
+
 ## 0.3.1 (2026-09-01)
 
 - fix: pass required --add-opens java options to packaged JVM launcher
