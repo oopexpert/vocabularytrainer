@@ -7,17 +7,15 @@ permissions:
   contents: write
 
 jobs:
-  release:
+  version:
     runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.version.outputs.skip }}
+      new_version: ${{ steps.version.outputs.new_version }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '21'
 
       - name: Determine next version
         id: version
@@ -100,21 +98,60 @@ jobs:
           git push origin "HEAD:${BRANCH}"
           git push origin "v${NEW_VERSION}"
 
-      - name: Build
-        if: steps.version.outputs.skip == 'false'
-        run: |
-          cd vocabularytrainer
-          mvn -B -Pdistribution -DskipTests clean install
+  build:
+    needs: version
+    if: needs.version.outputs.skip == 'false'
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            zip-name: VocabularyTrainer-linux-x64.zip
+            jdk-bin-suffix: ""
+          - os: windows-latest
+            zip-name: VocabularyTrainer-windows-x64.zip
+            jdk-bin-suffix: ".exe"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ needs.version.outputs.new_version }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build distribution
+        working-directory: vocabularytrainer
+        run: mvn -B -Pdistribution -DskipTests "-Ddist.zip.name=${{ matrix.zip-name }}" "-Djdk.bin.suffix=${{ matrix.jdk-bin-suffix }}" clean install
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.zip-name }}
+          path: vocabularytrainer/dist/${{ matrix.zip-name }}
+
+  release:
+    needs: [version, build]
+    if: needs.version.outputs.skip == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: v${{ needs.version.outputs.new_version }}
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
 
       - name: Create GitHub Release
-        if: steps.version.outputs.skip == 'false'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -e
-          NEW_VERSION="${{ steps.version.outputs.new_version }}"
+          NEW_VERSION="${{ needs.version.outputs.new_version }}"
           PREV_TAG=$(git tag --list 'v*.*.*' --sort=-v:refname | sed -n 2p)
-          ZIP="vocabularytrainer/dist/VocabularyTrainer.zip"
 
           if [ -z "$PREV_TAG" ]; then
             NOTES=$(git log --pretty=format:"- %s")
@@ -122,6 +159,7 @@ jobs:
             NOTES=$(git log "${PREV_TAG}..HEAD" --pretty=format:"- %s")
           fi
 
-          gh release create "v${NEW_VERSION}" "$ZIP" \
+          gh release create "v${NEW_VERSION}" artifacts/*.zip \
             --title "v${NEW_VERSION}" \
             --notes "$NOTES"
+

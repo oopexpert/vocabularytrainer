@@ -9,6 +9,10 @@
 	<properties>
 		<!-- JDK used for jlink/jpackage; must be a full JDK (not a JRE), override with -Djdk.home=... if needed -->
 		<jdk.home>${java.home}</jdk.home>
+		<!-- Windows braucht ".exe" bei direkten Prozessaufrufen (kein Shell-PATH-Lookup); auf Linux/macOS leer lassen. Override: -Djdk.bin.suffix=.exe -->
+		<jdk.bin.suffix></jdk.bin.suffix>
+		<!-- Name der erzeugten Distributions-ZIP; im CI pro Plattform ueberschreiben, z.B. -Ddist.zip.name=VocabularyTrainer-linux-x64.zip -->
+		<dist.zip.name>VocabularyTrainer.zip</dist.zip.name>
 	</properties>
 
 	<repositories>
@@ -134,7 +138,7 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${jdk.home}/bin/jlink</executable>
+									<executable>${jdk.home}/bin/jlink${jdk.bin.suffix}</executable>
 									<arguments>
 										<argument>--module-path=${jdk.home}/jmods</argument>
 										<argument>--add-modules</argument>
@@ -154,7 +158,7 @@
 									<goal>exec</goal>
 								</goals>
 								<configuration>
-									<executable>${jdk.home}/bin/jpackage</executable>
+									<executable>${jdk.home}/bin/jpackage${jdk.bin.suffix}</executable>
 									<arguments>
 										<argument>--type</argument>
 										<argument>app-image</argument>
@@ -214,7 +218,7 @@
 										<copy todir="${project.basedir}/dist/VocabularyTrainer/backgrounds" failonerror="false">
 											<fileset dir="${project.basedir}/backgrounds" erroronmissingdir="false" />
 										</copy>
-										<zip destfile="${project.basedir}/dist/VocabularyTrainer.zip"
+										<zip destfile="${project.basedir}/dist/${dist.zip.name}"
 											basedir="${project.basedir}/dist"
 											includes="VocabularyTrainer/**" />
 									</target>
