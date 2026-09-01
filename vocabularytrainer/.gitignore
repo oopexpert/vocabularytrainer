@@ -3,6 +3,7 @@
 /rewards/
 /statistics/
 /backgrounds/
+/dist/
 .classpath
 .project
 .settings

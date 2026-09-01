@@ -6,6 +6,11 @@
 	<artifactId>vocabularytrainer</artifactId>
 	<version>0.1.0</version>
 
+	<properties>
+		<!-- JDK used for jlink/jpackage; must be a full JDK (not a JRE), override with -Djdk.home=... if needed -->
+		<jdk.home>${java.home}</jdk.home>
+	</properties>
+
 	<repositories>
 		<repository>
 			<id>local-repo</id>
@@ -86,4 +91,139 @@
 			</plugin>
 		</plugins>
 	</build>
+
+	<profiles>
+		<!--
+			Erzeugt eine eigenständige Distribution mit mitgelieferter Java-Laufzeitumgebung
+			(jlink-Runtime + jpackage app-image) und packt das Ergebnis als ZIP.
+			Aufruf: mvn -Pdistribution clean package
+			Ergebnis: dist/VocabularyTrainer/... (entpackt) und dist/VocabularyTrainer.zip
+		-->
+		<profile>
+			<id>distribution</id>
+			<build>
+				<plugins>
+					<!-- dist/ und target/staging bei "clean" mit entfernen -->
+					<plugin>
+						<artifactId>maven-clean-plugin</artifactId>
+						<version>3.3.2</version>
+						<configuration>
+							<filesets>
+								<fileset>
+									<directory>${project.basedir}/dist</directory>
+									<followSymlinks>false</followSymlinks>
+								</fileset>
+								<fileset>
+									<directory>${project.build.directory}/staging</directory>
+								</fileset>
+							</filesets>
+						</configuration>
+					</plugin>
+
+					<!-- Fat-Jar (jar-with-dependencies) ins Staging-Verzeichnis kopieren; Runtime bauen; App-Image erzeugen -->
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>3.1.0</version>
+						<executions>
+							<!-- Minimale, eigenständige Java-Laufzeitumgebung bauen (nur benötigte Module) -->
+							<execution>
+								<id>jlink</id>
+								<phase>package</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>${jdk.home}/bin/jlink</executable>
+									<arguments>
+										<argument>--module-path=${jdk.home}/jmods</argument>
+										<argument>--add-modules</argument>
+										<argument>java.base,java.desktop,java.logging,jdk.unsupported,jdk.zipfs</argument>
+										<argument>--output</argument>
+										<argument>${project.build.directory}/vocabularytrainer-runtime</argument>
+										<argument>--no-header-files</argument>
+										<argument>--no-man-pages</argument>
+									</arguments>
+								</configuration>
+							</execution>
+							<!-- App-Image (Ordnerstruktur mit mitgelieferter Laufzeit) erzeugen -->
+							<execution>
+								<id>jpackage</id>
+								<phase>install</phase>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>${jdk.home}/bin/jpackage</executable>
+									<arguments>
+										<argument>--type</argument>
+										<argument>app-image</argument>
+										<argument>--dest</argument>
+										<argument>dist</argument>
+										<argument>--name</argument>
+										<argument>VocabularyTrainer</argument>
+										<argument>--input</argument>
+										<argument>${project.build.directory}/staging</argument>
+										<argument>--main-jar</argument>
+										<argument>vocabularytrainer.jar</argument>
+										<argument>--main-class</argument>
+										<argument>de.oopexpert.vocabulary.ui.VocabularyTrainerUI</argument>
+										<argument>--runtime-image</argument>
+										<argument>${project.build.directory}/vocabularytrainer-runtime</argument>
+									</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+
+					<!--
+						copy-main-jar-to-staging läuft in der package-Phase (vor jpackage).
+						copy-backgrounds-and-zip-dist läuft in der install-Phase NACH jpackage (Plugin-Reihenfolge
+						im POM entscheidet bei gleicher Phase über die Ausführungsreihenfolge): optionales lokales
+						Hintergrundbilder-Verzeichnis (siehe .gitignore: /backgrounds/) mit hinein kopieren,
+						falls vorhanden, und den App-Image-Ordner als ZIP verpacken. BackgroundImages liest
+						zur Laufzeit relativ zum Arbeitsverzeichnis aus "backgrounds" - bei jpackage-app-image
+						ist das Arbeitsverzeichnis das App-Image-Wurzelverzeichnis.
+					-->
+					<plugin>
+						<artifactId>maven-antrun-plugin</artifactId>
+						<version>3.1.0</version>
+						<executions>
+							<execution>
+								<id>copy-main-jar-to-staging</id>
+								<phase>package</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target>
+										<copy
+											file="${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar"
+											tofile="${project.build.directory}/staging/vocabularytrainer.jar" />
+									</target>
+								</configuration>
+							</execution>
+							<execution>
+								<id>copy-backgrounds-and-zip-dist</id>
+								<phase>install</phase>
+								<goals>
+									<goal>run</goal>
+								</goals>
+								<configuration>
+									<target>
+										<copy todir="${project.basedir}/dist/VocabularyTrainer/backgrounds" failonerror="false">
+											<fileset dir="${project.basedir}/backgrounds" erroronmissingdir="false" />
+										</copy>
+										<zip destfile="${project.basedir}/dist/VocabularyTrainer.zip"
+											basedir="${project.basedir}/dist"
+											includes="VocabularyTrainer/**" />
+									</target>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 </project>
