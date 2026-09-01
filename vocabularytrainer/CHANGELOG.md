@@ -1,3 +1,8 @@
+## 0.2.0 (2026-09-01)
+
+- feat: add distribution profile bundling jlink runtime and jpackage app-image into a zip
+- fix: tolerate missing backgrounds directory instead of throwing on startup
+
 ## 0.1.0 (2026-09-01)
 
 - fix: push release commit/tag to actual branch instead of hardcoded main
