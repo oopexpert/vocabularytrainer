@@ -50,6 +50,19 @@
 	</dependencies>
 
 	<build>
+		<!-- no_background.jpg liegt (historisch) unter src/main/java statt src/main/resources;
+		     zusaetzlich zum Standard-Resources-Verzeichnis mit aufnehmen, damit es im Jar landet. -->
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+			</resource>
+			<resource>
+				<directory>src/main/java</directory>
+				<includes>
+					<include>no_background.jpg</include>
+				</includes>
+			</resource>
+		</resources>
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
