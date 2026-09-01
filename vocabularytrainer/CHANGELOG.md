@@ -1,3 +1,7 @@
+## 0.3.0 (2026-09-01)
+
+- feat: build and release Linux and Windows distribution zips in parallel
+
 ## 0.2.1 (2026-09-01)
 
 - fix: build and publish distribution zip instead of plain jar in release workflow
