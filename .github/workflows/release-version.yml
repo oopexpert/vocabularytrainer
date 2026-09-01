@@ -104,7 +104,7 @@ jobs:
         if: steps.version.outputs.skip == 'false'
         run: |
           cd vocabularytrainer
-          mvn -B package -DskipTests
+          mvn -B -Pdistribution -DskipTests clean install
 
       - name: Create GitHub Release
         if: steps.version.outputs.skip == 'false'
@@ -114,7 +114,7 @@ jobs:
           set -e
           NEW_VERSION="${{ steps.version.outputs.new_version }}"
           PREV_TAG=$(git tag --list 'v*.*.*' --sort=-v:refname | sed -n 2p)
-          JAR=$(find vocabularytrainer/target -maxdepth 1 -name '*-jar-with-dependencies.jar')
+          ZIP="vocabularytrainer/dist/VocabularyTrainer.zip"
 
           if [ -z "$PREV_TAG" ]; then
             NOTES=$(git log --pretty=format:"- %s")
@@ -122,6 +122,6 @@ jobs:
             NOTES=$(git log "${PREV_TAG}..HEAD" --pretty=format:"- %s")
           fi
 
-          gh release create "v${NEW_VERSION}" "$JAR" \
+          gh release create "v${NEW_VERSION}" "$ZIP" \
             --title "v${NEW_VERSION}" \
             --notes "$NOTES"
