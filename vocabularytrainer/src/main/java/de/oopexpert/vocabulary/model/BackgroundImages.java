@@ -30,13 +30,15 @@ public class BackgroundImages {
 		
         File directory = new File(directoryPath);
 
+        List<Image> imageList = new ArrayList<>();
+
         if (!directory.exists() || !directory.isDirectory()) {
-            throw new IllegalArgumentException("Invalid directory path: " + directoryPath);
+            // Kein Hintergrundbilder-Verzeichnis vorhanden (z.B. frische Installation) -
+            // BackgroundImageRotation faellt in diesem Fall auf no_background.jpg zurueck.
+            return imageList;
         }
 
         File[] files = directory.listFiles();
-
-        List<Image> imageList = new ArrayList<>();
 
         if (files != null) {
             for (File file : files) {
