@@ -108,6 +108,11 @@ public class VocabularyLibrary {
         File directory = new File(new File("vocabularysets").getAbsolutePath());
         File[] files = directory.listFiles();
 
+        if (files == null) {
+            // Kein vocabularysets-Verzeichnis vorhanden (z.B. frische Installation) - keine Sets laden.
+            return vocabularySets;
+        }
+
         for (File file : files) {
             VocabularySet vocabularySet = loadFile(file);
             saveVocabularySetToJson(vocabularySet, file);
