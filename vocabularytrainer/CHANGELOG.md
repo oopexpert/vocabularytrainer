@@ -1,3 +1,7 @@
+## 0.3.1 (2026-09-01)
+
+- fix: pass required --add-opens java options to packaged JVM launcher
+
 ## 0.3.0 (2026-09-01)
 
 - feat: build and release Linux and Windows distribution zips in parallel
