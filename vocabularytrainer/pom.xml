@@ -174,6 +174,10 @@
 										<argument>de.oopexpert.vocabulary.ui.VocabularyTrainerUI</argument>
 										<argument>--runtime-image</argument>
 										<argument>${project.build.directory}/vocabularytrainer-runtime</argument>
+										<argument>--java-options</argument>
+										<argument>--add-opens=java.base/java.lang=ALL-UNNAMED</argument>
+										<argument>--java-options</argument>
+										<argument>--add-opens=java.base/java.util=ALL-UNNAMED</argument>
 									</arguments>
 								</configuration>
 							</execution>
